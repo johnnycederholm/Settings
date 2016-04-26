@@ -21,41 +21,30 @@ namespace Settings
             {
                 string[] nodes = GetSettingNodes(key);
 
-                WalkNodes(settings, modelTypeInformation, key, nodes, model);
+                WalkNodes(nodes, 0, model, settings[key]);
             }
 
             return model;
         }
 
-        private void WalkNodes(Dictionary<string, string> settings, Type modelTypeInformation, string key, string[] nodes, object parent)
+        private void WalkNodes(string[] nodes, int nodeIndex, object parent, string leafValue)
         {
-            for (int index = 0; index < nodes.Length; index++)
+            Type parentType = parent.GetType();
+            PropertyInfo property = parentType.GetProperty(nodes[nodeIndex]);
+            bool notLeaf = (nodeIndex + 1) < nodes.Length;
+
+            if (notLeaf)
             {
-                PropertyInfo property = null;
+                object currentParent = parent;
+                parent = Activator.CreateInstance(property.PropertyType);
+                property.SetValue(currentParent, parent);
 
-                if (index == 0)
-                {
-                    property = modelTypeInformation.GetProperty(nodes[index]);
-                }
-                else if (parent != null)
-                {
-                    Type parentType = parent.GetType();
-                    property = parentType.GetProperty(nodes[index]);
-                }
-
-                if (property != null && (index + 1) == nodes.Length)
-                {
-                    object convertedSettingValue = ConvertSettingValue(property, settings[key]);
-                    property.SetValue(parent, convertedSettingValue);
-                }
-                else
-                {
-                    object currentParent = parent;
-                    parent = Activator.CreateInstance(property.PropertyType);
-
-                    if (index == 0)
-                        property.SetValue(currentParent, parent);
-                }
+                WalkNodes(nodes, ++nodeIndex, parent, leafValue);
+            }
+            else
+            {
+                object convertedSettingValue = ConvertSettingValue(property, leafValue);
+                property.SetValue(parent, convertedSettingValue);
             }
         }
 

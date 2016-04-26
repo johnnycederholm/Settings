@@ -19,10 +19,37 @@ namespace Settings
 
             foreach (string key in settings.Keys)
             {
-                PropertyInfo property = modelTypeInformation.GetProperty(key);
-                object convertedSettingValue = ConvertSettingValue(property, settings[key]);
+                string[] nodes = key.Split(new string[] { "." }, StringSplitOptions.None);
+                object parent = model;
 
-                property.SetValue(model, convertedSettingValue);
+                for (int index = 0; index < nodes.Length; index++)
+                {
+                    PropertyInfo property = null;
+
+                    if (index == 0)
+                    {
+                        property = modelTypeInformation.GetProperty(nodes[index]);
+                    }
+                    else if (parent != null)
+                    {
+                        Type parentType = parent.GetType();
+                        property = parentType.GetProperty(nodes[index]);
+                    }
+
+
+                    if (property != null && (index + 1) == nodes.Length)
+                    {
+                        object convertedSettingValue = ConvertSettingValue(property, settings[key]);
+                        property.SetValue(parent, convertedSettingValue);
+                    }
+                    else
+                    {
+                        parent = Activator.CreateInstance(property.PropertyType);
+
+                        if (index == 0)
+                            property.SetValue(model, parent);
+                    }                                        
+                }
             }
 
             return model;

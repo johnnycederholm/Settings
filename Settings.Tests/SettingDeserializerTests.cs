@@ -105,5 +105,17 @@ namespace Settings.Tests
 
             actual.SomeDouble.ShouldEqual(expected);
         }
+
+        [Fact]
+        public void ShouldSetPropertyValueWhenFindingMatchingPropertyOnChild()
+        {
+            string expected = "SomeChildValue";
+            settings.Add("SomeChildObject.SomeChildString", expected);
+
+            SettingModel actual = deserializer.Deserialize<SettingModel>(settings);
+
+            actual.SomeChildObject.ShouldNotBeNull();
+            actual.SomeChildObject.SomeChildString.ShouldEqual(expected);
+        }
     }
 }

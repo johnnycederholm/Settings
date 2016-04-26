@@ -11,5 +11,12 @@ namespace Settings.Tests
         public DateTime SomeDate { get; set; }
         public decimal SomeDecimal { get; set; }
         public double SomeDouble { get; set; }
+
+        public ChildClass SomeChildObject { get; set; }
+    }
+
+    public class ChildClass
+    {
+        public string SomeChildString { get; set; }
     }
 }

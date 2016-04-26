@@ -19,29 +19,33 @@ namespace Settings
 
             foreach (string key in settings.Keys)
             {
-                string[] nodes = GetSettingNodes(key);
+                Queue<string> nodes = GetSettingNodes(key);
 
-                WalkNodes(nodes, 0, model, settings[key]);
+                WalkNodes(nodes, model, settings[key]);
             }
 
             return model;
         }
 
-        private void WalkNodes(string[] nodes, int nodeIndex, object parent, string leafValue)
+        private void WalkNodes(Queue<string> nodes, object parent, string leafValue)
         {
-            Type parentType = parent.GetType();
-            PropertyInfo property = parentType.GetProperty(nodes[nodeIndex]);
-            bool notLeaf = (nodeIndex + 1) < nodes.Length;
+            if (nodes.Count == 0)
+                return;
 
-            if (notLeaf)
+            string currentNode = nodes.Dequeue();
+            Type parentType = parent.GetType();
+            PropertyInfo property = parentType.GetProperty(currentNode);
+            bool notLeaf = nodes.Count > 0;
+
+            if (notLeaf && property != null)
             {
                 object currentParent = parent;
                 parent = Activator.CreateInstance(property.PropertyType);
                 property.SetValue(currentParent, parent);
 
-                WalkNodes(nodes, ++nodeIndex, parent, leafValue);
+                WalkNodes(nodes, parent, leafValue);
             }
-            else
+            else if (property != null)
             {
                 object convertedSettingValue = ConvertSettingValue(property, leafValue);
                 property.SetValue(parent, convertedSettingValue);
@@ -53,9 +57,11 @@ namespace Settings
         /// </summary>
         /// <param name="structure">The structure of the setting.</param>
         /// <returns></returns>
-        private string[] GetSettingNodes(string structure)
+        private Queue<string> GetSettingNodes(string structure)
         {
-            return structure.Split(new string[] { "." }, StringSplitOptions.None);
+            string[] nodes = structure.Split(new string[] { "." }, StringSplitOptions.None);
+
+            return new Queue<string>(nodes);            
         }
 
         /// <summary>

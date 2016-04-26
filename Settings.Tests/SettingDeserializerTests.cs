@@ -2,6 +2,7 @@
 using Should;
 using Xunit;
 using System;
+using Settings.Tests.Models;
 
 namespace Settings.Tests
 {
@@ -107,15 +108,38 @@ namespace Settings.Tests
         }
 
         [Fact]
-        public void ShouldSetPropertyValueWhenFindingMatchingPropertyOnChild()
+        public void ShouldSetPropertyValueWhenFindingMatchingPropertyOnSecondLevel()
         {
-            string expected = "SomeChildValue";
-            settings.Add("SomeChildObject.SomeChildString", expected);
+            string expected = "Storgatan 10";
+            settings.Add("Address.Street", expected);
 
-            SettingModel actual = deserializer.Deserialize<SettingModel>(settings);
+            Person actual = deserializer.Deserialize<Person>(settings);
 
-            actual.SomeChildObject.ShouldNotBeNull();
-            actual.SomeChildObject.SomeChildString.ShouldEqual(expected);
+            actual.Address.ShouldNotBeNull();
+            actual.Address.Street.ShouldEqual(expected);
+        }
+
+        [Fact]
+        public void ShouldSetPropertyValueWhenFindingMatchingPropertyOnThirdLevel()
+        {
+            int expected = 46;
+            settings.Add("Address.Country.CountryCode", expected.ToString());
+
+            Person actual = deserializer.Deserialize<Person>(settings);
+
+            actual.Address.Country.ShouldNotBeNull();
+            actual.Address.Country.CountryCode.ShouldEqual(expected);
+        }
+
+        [Fact]
+        public void ShouldNotThrowExceptionIfMatchingPropertyCantBeFound()
+        {
+            settings.Add("Address.Countr.CountryCode", "");
+
+            Person actual = deserializer.Deserialize<Person>(settings);
+
+            actual.Address.ShouldNotBeNull();
+            actual.Address.Country.ShouldBeNull();
         }
     }
 }

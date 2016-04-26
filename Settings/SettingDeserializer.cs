@@ -19,40 +19,54 @@ namespace Settings
 
             foreach (string key in settings.Keys)
             {
-                string[] nodes = key.Split(new string[] { "." }, StringSplitOptions.None);
-                object parent = model;
+                string[] nodes = GetSettingNodes(key);
 
-                for (int index = 0; index < nodes.Length; index++)
-                {
-                    PropertyInfo property = null;
-
-                    if (index == 0)
-                    {
-                        property = modelTypeInformation.GetProperty(nodes[index]);
-                    }
-                    else if (parent != null)
-                    {
-                        Type parentType = parent.GetType();
-                        property = parentType.GetProperty(nodes[index]);
-                    }
-
-
-                    if (property != null && (index + 1) == nodes.Length)
-                    {
-                        object convertedSettingValue = ConvertSettingValue(property, settings[key]);
-                        property.SetValue(parent, convertedSettingValue);
-                    }
-                    else
-                    {
-                        parent = Activator.CreateInstance(property.PropertyType);
-
-                        if (index == 0)
-                            property.SetValue(model, parent);
-                    }                                        
-                }
+                WalkNodes(settings, modelTypeInformation, key, nodes, model);
             }
 
             return model;
+        }
+
+        private void WalkNodes(Dictionary<string, string> settings, Type modelTypeInformation, string key, string[] nodes, object parent)
+        {
+            for (int index = 0; index < nodes.Length; index++)
+            {
+                PropertyInfo property = null;
+
+                if (index == 0)
+                {
+                    property = modelTypeInformation.GetProperty(nodes[index]);
+                }
+                else if (parent != null)
+                {
+                    Type parentType = parent.GetType();
+                    property = parentType.GetProperty(nodes[index]);
+                }
+
+                if (property != null && (index + 1) == nodes.Length)
+                {
+                    object convertedSettingValue = ConvertSettingValue(property, settings[key]);
+                    property.SetValue(parent, convertedSettingValue);
+                }
+                else
+                {
+                    object currentParent = parent;
+                    parent = Activator.CreateInstance(property.PropertyType);
+
+                    if (index == 0)
+                        property.SetValue(currentParent, parent);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Get all nodes in setting structure.
+        /// </summary>
+        /// <param name="structure">The structure of the setting.</param>
+        /// <returns></returns>
+        private string[] GetSettingNodes(string structure)
+        {
+            return structure.Split(new string[] { "." }, StringSplitOptions.None);
         }
 
         /// <summary>

@@ -141,5 +141,29 @@ namespace Settings.Tests
             actual.Address.ShouldNotBeNull();
             actual.Address.Country.ShouldBeNull();
         }
+
+        [Fact]
+        public void ShouldSetPropertyValueOnAllMatchingProperties()
+        {
+            settings.Add("Name", "Anders Bengtsson");
+            settings.Add("Age", "45");
+            settings.Add("Address.Street", "Storgatan 10");
+            settings.Add("Address.ZipCode", "831 35");
+            settings.Add("Address.City", "Lilla edet");
+            settings.Add("Address.Country.Name", "Sweden");
+            settings.Add("Address.Country.CountryCode", "46");
+
+            Person actual = deserializer.Deserialize<Person>(settings);
+
+            actual.Name.ShouldEqual("Anders Bengtsson");
+            actual.Age.ShouldEqual(45);
+            actual.Address.ShouldNotBeNull();
+            actual.Address.Street.ShouldEqual("Storgatan 10");
+            actual.Address.ZipCode.ShouldEqual("831 35");
+            actual.Address.City.ShouldEqual("Lilla edet");
+            actual.Address.Country.ShouldNotBeNull();
+            actual.Address.Country.Name.ShouldEqual("Sweden");
+            actual.Address.Country.CountryCode.ShouldEqual(46);
+        }
     }
 }

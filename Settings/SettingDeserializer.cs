@@ -40,9 +40,18 @@ namespace Settings
             if (notLeaf && property != null)
             {
                 object currentParent = parent;
-                parent = Activator.CreateInstance(property.PropertyType);
-                property.SetValue(currentParent, parent);
+                bool nodeNotExist = property.GetValue(currentParent) == null;
 
+                if (nodeNotExist)
+                {
+                    parent = Activator.CreateInstance(property.PropertyType);
+                    property.SetValue(currentParent, parent);
+                }
+                else
+                {
+                    parent = property.GetValue(currentParent);
+                }
+            
                 WalkNodes(nodes, parent, leafValue);
             }
             else if (property != null)
